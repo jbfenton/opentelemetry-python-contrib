@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-instrumentation-aws-lambda` Bugfix: AWS Lambda event source key incorrect for SNS in instrumentation library. 
   ([#2612](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2612))
+- `opentelemetry-instrumentation-system-metrics` Permit to use psutil 6.0+.
+  ([#2630](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2630))
 
 ### Added
 
@@ -18,11 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2573](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2573))
 - `opentelemetry-instrumentation-confluent-kafka` Add support for version 2.4.0 of confluent_kafka
   ([#2616](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2616))
+- `opentelemetry-instrumentation-confluent-kafka` Add support for produce purge
+  ([#2638](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2638))
 
 ### Breaking changes
 
 - `opentelemetry-instrumentation-asgi`, `opentelemetry-instrumentation-fastapi`, `opentelemetry-instrumentation-starlette` Use `tracer` and `meter` of originating components instead of one from `asgi` middleware
   ([#2580](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2580))
+- `opentelemetry-instrumentation-aws-lambda` If providing an `event_context_extractor` `kwarg` to the instrumentation, the callable should now accept a child of the `EventWrapper` class.
+  ([#2585](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2585))
 
 ### Fixed
 
@@ -44,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2300](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2300))
 - Rename AwsLambdaInstrumentor span attributes `faas.id` to `cloud.resource_id`, `faas.execution` to `faas.invocation_id`
   ([#2372](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2372))
-- Drop support for instrumenting elasticsearch client < 6`
+- Drop support for instrumenting elasticsearch client < 6
   ([#2422](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2422))
 - `opentelemetry-instrumentation-wsgi` Add `http.method` to `span.name`
   ([#2425](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2425))
