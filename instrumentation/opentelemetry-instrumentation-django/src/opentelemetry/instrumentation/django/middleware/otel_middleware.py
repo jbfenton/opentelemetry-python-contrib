@@ -187,6 +187,7 @@ class _DjangoMiddleware(MiddlewareMixin):
             return request.method
 
     # pylint: disable=too-many-locals
+    # pylint: disable=too-many-branches
     def process_request(self, request):
         # request.META is a dictionary containing all available HTTP headers
         # Read more about request.META here:
@@ -286,9 +287,14 @@ class _DjangoMiddleware(MiddlewareMixin):
             request.META[self._environ_token] = token
 
         if _DjangoMiddleware._otel_request_hook:
-            _DjangoMiddleware._otel_request_hook(  # pylint: disable=not-callable
-                span, request
-            )
+            try:
+                _DjangoMiddleware._otel_request_hook(  # pylint: disable=not-callable
+                    span, request
+                )
+            except Exception:  # pylint: disable=broad-exception-caught
+                # Raising an exception here would leak the request span since process_response
+                # would not be called. Log the exception instead.
+                _logger.exception("Exception raised by request_hook")
 
     # pylint: disable=unused-argument
     def process_view(self, request, view_func, *args, **kwargs):
@@ -309,6 +315,12 @@ class _DjangoMiddleware(MiddlewareMixin):
                     route = getattr(match, "route", None)
                     if route:
                         span.set_attribute(SpanAttributes.HTTP_ROUTE, route)
+                        duration_attrs = request.META[
+                            self._environ_duration_attr_key
+                        ]
+                        # Metrics currently use the 1.11.0 schema, which puts the route in `http.target`.
+                        # TODO: use `http.route` when the user sets `OTEL_SEMCONV_STABILITY_OPT_IN`.
+                        duration_attrs[SpanAttributes.HTTP_TARGET] = route
 
     def process_exception(self, request, exception):
         if self._excluded_urls.url_disabled(request.build_absolute_uri("?")):
@@ -385,10 +397,14 @@ class _DjangoMiddleware(MiddlewareMixin):
 
             # record any exceptions raised while processing the request
             exception = request.META.pop(self._environ_exception_key, None)
+
             if _DjangoMiddleware._otel_response_hook:
-                _DjangoMiddleware._otel_response_hook(  # pylint: disable=not-callable
-                    span, request, response
-                )
+                try:
+                    _DjangoMiddleware._otel_response_hook(  # pylint: disable=not-callable
+                        span, request, response
+                    )
+                except Exception:  # pylint: disable=broad-exception-caught
+                    _logger.exception("Exception raised by response_hook")
 
             if exception:
                 activation.__exit__(
